@@ -1,19 +1,19 @@
 /* ----------------------------------------------------
- * Chronicle Map - Design System & Modern UI Styles
+ * 史跡クロニクルマップ - Design System & Modern UI Styles
  * ---------------------------------------------------- */
 
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
-  --bg-glass: rgba(255, 255, 255, 0.88);
-  --bg-glass-dark: rgba(15, 23, 42, 0.88);
+  --bg-glass: rgba(255, 255, 255, 0.92);
+  --bg-glass-dark: rgba(15, 23, 42, 0.92);
   --text-main: #0f172a;
   --text-muted: #64748b;
-  --border-light: rgba(226, 232, 240, 0.8);
-  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --border-light: rgba(226, 232, 240, 0.85);
+  --shadow-lg: 0 12px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 12px -6px rgba(0, 0, 0, 0.1);
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --radius-lg: 16px;
-  --radius-md: 10px;
+  --radius-lg: 18px;
+  --radius-md: 12px;
   --radius-full: 9999px;
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
 }
@@ -49,13 +49,13 @@ html, body {
   background: var(--bg-glass-dark);
   color: white;
   backdrop-filter: blur(10px);
-  padding: 6px 16px;
+  padding: 8px 20px;
   border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   box-shadow: var(--shadow-lg);
   pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   text-align: center;
   white-space: nowrap;
 }
@@ -106,7 +106,7 @@ html, body {
   background: var(--bg-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-light);
@@ -116,22 +116,22 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  font-size: 1.05rem;
+  font-weight: 800;
+  font-size: 1.1rem;
   color: #1e293b;
   white-space: nowrap;
 }
 
 .brand-icon {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: linear-gradient(135deg, #2563eb, #7c3aed);
   color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .search-wrapper {
@@ -141,12 +141,12 @@ html, body {
 
 .search-input {
   width: 100%;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border-radius: var(--radius-md);
   border: 1px solid rgba(203, 213, 225, 0.8);
   outline: none;
-  font-size: 0.88rem;
-  background: rgba(255, 255, 255, 0.9);
+  font-size: 0.92rem;
+  background: rgba(255, 255, 255, 0.95);
   transition: all 0.2s ease;
 }
 
@@ -165,7 +165,7 @@ html, body {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border-light);
-  max-height: 240px;
+  max-height: 260px;
   overflow-y: auto;
   display: none;
   z-index: 20;
@@ -201,11 +201,11 @@ html, body {
 }
 
 .basemap-select {
-  padding: 8px 10px;
+  padding: 9px 12px;
   border-radius: var(--radius-md);
   border: 1px solid #cbd5e1;
   background: white;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
@@ -289,21 +289,23 @@ html, body {
 }
 
 /* ----------------------------------------------------
- * OpenLayers Popup Overlay (吹き出し & タブ分離)
+ * OpenLayers Popup Overlay (PC: 横長 / スマホ: 縦長カード)
  * ---------------------------------------------------- */
 .ol-popup {
   position: absolute;
   background: white;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
-  padding: 14px;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
+  padding: 18px 20px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
-  bottom: 12px;
-  left: -160px;
-  width: 320px;
+  bottom: 14px;
   z-index: 50;
   display: none;
   animation: popUpAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  /* PC用デフォルト: 横長デザイン (幅 500px) */
+  width: 500px;
+  left: -250px;
 }
 
 .ol-popup:after {
@@ -316,30 +318,30 @@ html, body {
   pointer-events: none;
   border-color: rgba(255, 255, 255, 0);
   border-top-color: #ffffff;
-  border-width: 10px;
-  left: 160px;
-  margin-left: -10px;
+  border-width: 11px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
-/* タブバー */
+/* 吹き出し内タブ */
 .popup-tabs {
   display: flex;
   gap: 4px;
   background: #f1f5f9;
-  padding: 3px;
+  padding: 4px;
   border-radius: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .popup-tab-btn {
   flex: 1;
   background: none;
   border: none;
-  padding: 6px 4px;
-  font-size: 0.76rem;
+  padding: 7px 6px;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #64748b;
-  border-radius: 7px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
@@ -355,10 +357,10 @@ html, body {
 }
 
 .tab-badge {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   background: #e2e8f0;
-  padding: 1px 5px;
-  border-radius: 8px;
+  padding: 2px 6px;
+  border-radius: 10px;
 }
 .popup-tab-btn.active .tab-badge {
   background: #dbeafe;
@@ -369,90 +371,102 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .popup-header-right {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .popup-tag {
   display: inline-block;
   background: #eff6ff;
   color: #2563eb;
-  font-size: 0.72rem;
+  font-size: 0.76rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 6px;
 }
 
 .popup-counter-badge {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: #475569;
   background: #f1f5f9;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 12px;
 }
 
 .btn-close-popup {
-  background: none;
+  background: #f1f5f9;
   border: none;
-  font-size: 16px;
-  color: #94a3b8;
+  font-size: 14px;
+  color: #64748b;
   cursor: pointer;
-  padding: 2px 4px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease;
+}
+.btn-close-popup:hover {
+  background: #e2e8f0;
+  color: #0f172a;
 }
 
 .popup-title {
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: #0f172a;
-  line-height: 1.3;
+  line-height: 1.35;
+  margin-bottom: 2px;
 }
 
 .popup-era {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   color: #64748b;
-  margin-bottom: 8px;
-  font-weight: 500;
+  margin-bottom: 10px;
+  font-weight: 600;
 }
 
 .popup-short-desc {
-  font-size: 0.83rem;
+  font-size: 0.9rem;
   color: #334155;
-  line-height: 1.4;
-  margin-bottom: 12px;
+  line-height: 1.55;
+  margin-bottom: 14px;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .popup-footer {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
 }
 
 .popup-nav-btns {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .btn-nav {
   background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
+  transition: background 0.15s ease;
 }
 .btn-nav:hover {
   background: #e2e8f0;
@@ -460,23 +474,24 @@ html, body {
 
 .btn-popup-detail {
   flex: 1;
-  background: #f1f5f9;
+  background: var(--primary);
   border: none;
-  padding: 8px;
+  padding: 10px;
   border-radius: var(--radius-md);
-  color: var(--primary);
-  font-size: 0.82rem;
+  color: white;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease;
+  text-align: center;
 }
 
 .btn-popup-detail:hover {
-  background: #e2e8f0;
+  background: var(--primary-hover);
 }
 
 @keyframes popUpAnim {
-  0% { opacity: 0; transform: scale(0.8) translateY(10px); }
+  0% { opacity: 0; transform: scale(0.85) translateY(10px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -506,7 +521,7 @@ html, body {
 .modal-card {
   background: white;
   width: 90%;
-  max-width: 520px;
+  max-width: 540px;
   max-height: 85vh;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
@@ -536,7 +551,7 @@ html, body {
 
 .modal-img {
   width: 100%;
-  height: 200px;
+  height: 220px;
   object-fit: cover;
   border-radius: 12px;
   margin-bottom: 16px;
@@ -637,35 +652,67 @@ html, body {
   margin-top: 10px;
 }
 
+/* ----------------------------------------------------
+ * モバイル・タブレット用調整 (スマホでは縦に長い見やすい形状)
+ * ---------------------------------------------------- */
 @media (max-width: 640px) {
   .target-guide-banner {
     top: auto;
-    bottom: 80px;
+    bottom: 85px;
     font-size: 0.72rem;
-    padding: 4px 12px;
+    padding: 6px 14px;
+    white-space: normal;
+    width: 90%;
   }
+
   .top-bar {
     top: 10px;
     left: 10px;
     right: 10px;
     gap: 8px;
   }
+
   .brand-search-box {
     flex-direction: column;
     align-items: stretch;
     padding: 10px;
   }
+
   .header-actions {
     justify-content: space-between;
   }
+
   .basemap-select {
     flex: 1;
   }
+
+  /* 携帯スマホ用: 縦に長いカード型吹き出し */
   .ol-popup {
-    width: 270px;
-    left: -135px;
+    width: 320px;
+    left: -160px;
+    padding: 16px;
+    max-height: 70vh;
+    overflow-y: auto;
   }
-  .ol-popup:after {
-    left: 135px;
+
+  .popup-tabs {
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .popup-tab-btn {
+    flex: 1 1 45%;
+    font-size: 0.74rem;
+    padding: 6px 2px;
+  }
+
+  .popup-title {
+    font-size: 1.08rem;
+  }
+
+  .popup-short-desc {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 6; /* スマホでは縦長に文章を長めに表示 */
+    margin-bottom: 16px;
   }
 }
