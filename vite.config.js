@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // 相対パスに指定することで、Cloudflare Pages (ルート配下) でも GitHub Pages (サブディレクトリ配下) でも共通で正常動作します
-  base: './',
+  // GitHub Pages のサブディレクトリパス名 (/AI_Antigra_Proj_Historical-Site-Chronicle-Map/) に完全準拠
+  base: '/AI_Antigra_Proj_Historical-Site-Chronicle-Map/',
 });
