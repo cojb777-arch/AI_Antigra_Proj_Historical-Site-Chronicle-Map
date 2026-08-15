@@ -28,7 +28,6 @@ class ChronicleMapApp {
     this.eventsList = [...INITIAL_EVENTS];
     this.loadUserEvents();
     
-    // サービスインスタンス初期化
     this.wikidataService = new WikidataService();
     this.dbpediaService = new DbpediaService();
     this.overpassService = new OverpassService();
@@ -190,7 +189,7 @@ class ChronicleMapApp {
         const coord = clickedFeature.getGeometry().getCoordinates();
         this.overlay.setPosition(coord);
         this.ui.resetPopupData();
-        this.ui.setSourceEvents("wiki", [eventData]);
+        this.ui.setSourceEvents("wikidata", [eventData]);
       } else {
         const lonLat = toLonLat(evt.coordinate);
         this.placeTargetPin(lonLat);
@@ -254,7 +253,7 @@ class ChronicleMapApp {
   }
 
   /**
-   * ターゲットピン周辺の歴史検索 (5大データベース並列＆ストリーミング取得)
+   * ターゲットピン周辺の歴史検索 (完全に相互独立した非同期ストリーミングフェッチ)
    */
   async searchAroundTarget() {
     if (!this.targetCoordinate) return;
@@ -262,7 +261,7 @@ class ChronicleMapApp {
     const [targetLng, targetLat] = this.targetCoordinate;
     this.ui.resetPopupData();
 
-    // ローカルデータ
+    // ローカルサンプルデータ
     const localMatches = this.eventsList.filter(evt => {
       if (!evt.coordinates) return false;
       const distKm = this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0]);
@@ -272,21 +271,38 @@ class ChronicleMapApp {
       distKm: this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0])
     }));
 
-    // 1. 【Wiki & DBpedia タブ】(爆速並列フェッチ)
-    Promise.all([
-      this.wikidataService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm),
-      this.dbpediaService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm)
-    ]).then(([wikiList, dbpList]) => {
-      const combined = [...localMatches, ...wikiList, ...dbpList].map(e => ({
-        ...e,
-        distKm: e.distKm || this.getHaversineDistance(targetLat, targetLng, e.coordinates[1], e.coordinates[0])
+    // 1. 【Wikidata 独立フェッチ】 (絶対に他APIの影響を受けずに爆速単独表示！)
+    this.wikidataService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(wikiMatches => {
+      const wikiFormatted = wikiMatches.map(evt => ({
+        ...evt,
+        distKm: this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0])
       }));
-      combined.sort((a, b) => a.distKm - b.distKm);
-      this.mergeExternalEventsToMap([...wikiList, ...dbpList]);
-      this.ui.setSourceEvents("wiki", combined.slice(0, 15));
+      const wikiCombined = [...localMatches, ...wikiFormatted];
+      wikiCombined.sort((a, b) => a.distKm - b.distKm);
+
+      this.mergeExternalEventsToMap(wikiMatches);
+      this.ui.setSourceEvents("wikidata", wikiCombined.slice(0, 15));
+    }).catch(err => {
+      console.warn("Wikidata fetch error:", err);
+      this.ui.setSourceEvents("wikidata", localMatches);
     });
 
-    // 2. 【OSM & OHM 史跡タブ】(並列フェッチ)
+    // 2. 【DBpedia 独立フェッチ】
+    this.dbpediaService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(dbpList => {
+      const dbpFormatted = dbpList.map(evt => ({
+        ...evt,
+        distKm: this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0])
+      }));
+      dbpFormatted.sort((a, b) => a.distKm - b.distKm);
+
+      this.mergeExternalEventsToMap(dbpList);
+      this.ui.setSourceEvents("dbpedia", dbpFormatted);
+    }).catch(err => {
+      console.warn("DBpedia fetch error:", err);
+      this.ui.setSourceEvents("dbpedia", []);
+    });
+
+    // 3. 【OSM & OHM 史跡 独立フェッチ】
     Promise.all([
       this.overpassService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm),
       this.ohmService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm)
@@ -296,25 +312,35 @@ class ChronicleMapApp {
         distKm: this.getHaversineDistance(targetLat, targetLng, e.coordinates[1], e.coordinates[0])
       }));
       combined.sort((a, b) => a.distKm - b.distKm);
+
       this.mergeExternalEventsToMap(combined);
       this.ui.setSourceEvents("osm", combined.slice(0, 15));
+    }).catch(err => {
+      console.warn("OSM fetch error:", err);
+      this.ui.setSourceEvents("osm", []);
     });
 
-    // 3. 【ユネスコ世界遺産タブ】(即時判定)
+    // 4. 【ユネスコ世界遺産 独立判定】
     this.unescoService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(unescoList => {
       this.mergeExternalEventsToMap(unescoList);
       this.ui.setSourceEvents("unesco", unescoList);
+    }).catch(err => {
+      this.ui.setSourceEvents("unesco", []);
     });
 
-    // 4. 【ジャパンサーチ タブ】(バックグラウンドフェッチ)
+    // 5. 【ジャパンサーチ 独立フェッチ】
     this.japanSearchService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(jpsList => {
       const jpsFormatted = jpsList.map(e => ({
         ...e,
         distKm: this.getHaversineDistance(targetLat, targetLng, e.coordinates[1], e.coordinates[0])
       }));
       jpsFormatted.sort((a, b) => a.distKm - b.distKm);
+
       this.mergeExternalEventsToMap(jpsList);
       this.ui.setSourceEvents("jps", jpsFormatted.slice(0, 15));
+    }).catch(err => {
+      console.warn("Japan Search fetch error:", err);
+      this.ui.setSourceEvents("jps", []);
     });
   }
 

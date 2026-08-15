@@ -65,12 +65,15 @@
       </button>
     </div>
 
-    <!-- OpenLayers 吹き出し（5大世界データベース統合タブ） -->
+    <!-- OpenLayers 吹き出し（独立データソースタブ） -->
     <div id="popup-overlay" class="ol-popup">
-      <!-- 5大データベース切替タブ -->
+      <!-- 5大データベース独立切替タブ -->
       <div class="popup-tabs">
-        <button id="tab-wiki-btn" class="popup-tab-btn active" title="Wikidata & DBpedia">
-          🌐 Wiki <span id="tab-wiki-badge" class="tab-badge">…</span>
+        <button id="tab-wikidata-btn" class="popup-tab-btn active" title="Wikidata 史跡・出来事">
+          🌐 Wikidata <span id="tab-wikidata-badge" class="tab-badge">…</span>
+        </button>
+        <button id="tab-dbpedia-btn" class="popup-tab-btn" title="DBpedia ナレッジ">
+          📚 DBpedia <span id="tab-dbpedia-badge" class="tab-badge">…</span>
         </button>
         <button id="tab-osm-btn" class="popup-tab-btn" title="OpenStreetMap & OHM 史跡">
           🏛️ 史跡 <span id="tab-osm-badge" class="tab-badge">…</span>

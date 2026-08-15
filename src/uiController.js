@@ -1,7 +1,7 @@
 import { PERIOD_GROUPS, CATEGORIES } from "./eventsData.js";
 
 /**
- * UIコントロールとインターフェース管理クラス (修復＆安定化版)
+ * UIコントロールとインターフェース管理クラス (Wikidata / DBpedia 独立分離版)
  */
 export class UIController {
   constructor(options = {}) {
@@ -13,13 +13,15 @@ export class UIController {
     this.onLocateMe = options.onLocateMe || (() => {});
     this.onRadiusChange = options.onRadiusChange || (() => {});
 
+    // ソース別独立データストア
     this.eventsDataStore = {
-      wiki: [],
+      wikidata: [],
+      dbpedia: [],
       osm: [],
       unesco: [],
       jps: []
     };
-    this.currentSource = "wiki";
+    this.currentSource = "wikidata";
     this.currentIndex = 0;
 
     this.initDOMElements();
@@ -68,13 +70,15 @@ export class UIController {
     this.btnPopupDetail = document.getElementById("btn-popup-detail");
     this.btnPopupClose = document.getElementById("btn-popup-close");
 
-    // タブ
-    this.tabWikiBtn = document.getElementById("tab-wiki-btn");
+    // 独立タブ
+    this.tabWikidataBtn = document.getElementById("tab-wikidata-btn");
+    this.tabDbpediaBtn = document.getElementById("tab-dbpedia-btn");
     this.tabOsmBtn = document.getElementById("tab-osm-btn");
     this.tabUnescoBtn = document.getElementById("tab-unesco-btn");
     this.tabJpsBtn = document.getElementById("tab-jps-btn");
 
-    this.tabWikiBadge = document.getElementById("tab-wiki-badge");
+    this.tabWikidataBadge = document.getElementById("tab-wikidata-badge");
+    this.tabDbpediaBadge = document.getElementById("tab-dbpedia-badge");
     this.tabOsmBadge = document.getElementById("tab-osm-badge");
     this.tabUnescoBadge = document.getElementById("tab-unesco-badge");
     this.tabJpsBadge = document.getElementById("tab-jps-badge");
@@ -145,7 +149,9 @@ export class UIController {
       this.closeAddModal();
     });
 
-    this.tabWikiBtn?.addEventListener("click", () => this.switchTab("wiki"));
+    // 独立タブのイベントバインド
+    this.tabWikidataBtn?.addEventListener("click", () => this.switchTab("wikidata"));
+    this.tabDbpediaBtn?.addEventListener("click", () => this.switchTab("dbpedia"));
     this.tabOsmBtn?.addEventListener("click", () => this.switchTab("osm"));
     this.tabUnescoBtn?.addEventListener("click", () => this.switchTab("unesco"));
     this.tabJpsBtn?.addEventListener("click", () => this.switchTab("jps"));
@@ -207,9 +213,10 @@ export class UIController {
     this.currentSource = sourceType;
     this.currentIndex = 0;
 
-    [this.tabWikiBtn, this.tabOsmBtn, this.tabUnescoBtn, this.tabJpsBtn].forEach(btn => btn?.classList.remove("active"));
+    [this.tabWikidataBtn, this.tabDbpediaBtn, this.tabOsmBtn, this.tabUnescoBtn, this.tabJpsBtn].forEach(btn => btn?.classList.remove("active"));
 
-    if (sourceType === "wiki") this.tabWikiBtn?.classList.add("active");
+    if (sourceType === "wikidata") this.tabWikidataBtn?.classList.add("active");
+    if (sourceType === "dbpedia") this.tabDbpediaBtn?.classList.add("active");
     if (sourceType === "osm") this.tabOsmBtn?.classList.add("active");
     if (sourceType === "unesco") this.tabUnescoBtn?.classList.add("active");
     if (sourceType === "jps") this.tabJpsBtn?.classList.add("active");
@@ -218,16 +225,17 @@ export class UIController {
   }
 
   resetPopupData() {
-    this.eventsDataStore = { wiki: [], osm: [], unesco: [], jps: [] };
+    this.eventsDataStore = { wikidata: [], dbpedia: [], osm: [], unesco: [], jps: [] };
     this.currentIndex = 0;
-    this.currentSource = "wiki";
+    this.currentSource = "wikidata";
 
-    if (this.tabWikiBadge) this.tabWikiBadge.textContent = "検索中…";
-    if (this.tabOsmBadge) this.tabOsmBadge.textContent = "検索中…";
-    if (this.tabUnescoBadge) this.tabUnescoBadge.textContent = "検索中…";
-    if (this.tabJpsBadge) this.tabJpsBadge.textContent = "検索中…";
+    if (this.tabWikidataBadge) this.tabWikidataBadge.textContent = "…";
+    if (this.tabDbpediaBadge) this.tabDbpediaBadge.textContent = "…";
+    if (this.tabOsmBadge) this.tabOsmBadge.textContent = "…";
+    if (this.tabUnescoBadge) this.tabUnescoBadge.textContent = "…";
+    if (this.tabJpsBadge) this.tabJpsBadge.textContent = "…";
 
-    this.switchTab("wiki");
+    this.switchTab("wikidata");
     if (this.popupContainer) this.popupContainer.style.display = "block";
   }
 
@@ -235,7 +243,8 @@ export class UIController {
     this.eventsDataStore[sourceType] = events || [];
 
     const badgeMap = {
-      wiki: this.tabWikiBadge,
+      wikidata: this.tabWikidataBadge,
+      dbpedia: this.tabDbpediaBadge,
       osm: this.tabOsmBadge,
       unesco: this.tabUnescoBadge,
       jps: this.tabJpsBadge
@@ -254,8 +263,9 @@ export class UIController {
     const list = this.eventsDataStore[this.currentSource] || [];
     if (!list || list.length === 0) {
       const names = {
-        wiki: "Wikidata & DBpedia 世界ナレッジ",
-        osm: "OpenStreetMap & OHM 史跡・遺構",
+        wikidata: "Wikidata 世界史跡・出来事",
+        dbpedia: "DBpedia ナレッジ",
+        osm: "OpenStreetMap & OHM 史跡遺構",
         unesco: "UNESCO ユネスコ世界遺産",
         jps: "ジャパンサーチ (国立国会図書館)"
       };
@@ -263,7 +273,7 @@ export class UIController {
       if (this.popupTitle) this.popupTitle.textContent = names[this.currentSource] || "歴史スポット";
       if (this.popupEra) this.popupEra.textContent = "検索半径内にデータが見つかりませんでした";
       if (this.popupCategory) this.popupCategory.textContent = "周辺情報";
-      if (this.popupShortDesc) this.popupShortDesc.textContent = "指定された半径内にこのデータベースの史跡はまだ登録されていません。上の他のタブ（Wiki/史跡/ユネスコ/国会図）に切り替えるか、半径を変更してみてください。";
+      if (this.popupShortDesc) this.popupShortDesc.textContent = "指定された半径内にこのデータベースの史跡は検出されませんでした。別のタブに切り替えるか、半径を変更してみてください。";
       if (this.popupCounter) this.popupCounter.textContent = "0件";
       if (this.btnPopupDetail) this.btnPopupDetail.style.display = "none";
       this.currentSelectedEvent = null;
