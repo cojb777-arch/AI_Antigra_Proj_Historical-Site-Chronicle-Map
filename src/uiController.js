@@ -1,7 +1,7 @@
 import { PERIOD_GROUPS, CATEGORIES } from "./eventsData.js";
 
 /**
- * UIコントロールとインターフェース管理クラス (5大世界データベース完全統合版)
+ * UIコントロールとインターフェース管理クラス (修復＆安定化版)
  */
 export class UIController {
   constructor(options = {}) {
@@ -13,7 +13,6 @@ export class UIController {
     this.onLocateMe = options.onLocateMe || (() => {});
     this.onRadiusChange = options.onRadiusChange || (() => {});
 
-    // マルチソース・データ保持
     this.eventsDataStore = {
       wiki: [],
       osm: [],
@@ -69,7 +68,7 @@ export class UIController {
     this.btnPopupDetail = document.getElementById("btn-popup-detail");
     this.btnPopupClose = document.getElementById("btn-popup-close");
 
-    // 5大データベース切り替えタブ
+    // タブ
     this.tabWikiBtn = document.getElementById("tab-wiki-btn");
     this.tabOsmBtn = document.getElementById("tab-osm-btn");
     this.tabUnescoBtn = document.getElementById("tab-unesco-btn");
@@ -146,7 +145,6 @@ export class UIController {
       this.closeAddModal();
     });
 
-    // 5大データベース タブ切り替えイベント
     this.tabWikiBtn?.addEventListener("click", () => this.switchTab("wiki"));
     this.tabOsmBtn?.addEventListener("click", () => this.switchTab("osm"));
     this.tabUnescoBtn?.addEventListener("click", () => this.switchTab("unesco"));
@@ -224,17 +222,17 @@ export class UIController {
     this.currentIndex = 0;
     this.currentSource = "wiki";
 
-    if (this.tabWikiBadge) this.tabWikiBadge.textContent = "…";
-    if (this.tabOsmBadge) this.tabOsmBadge.textContent = "…";
-    if (this.tabUnescoBadge) this.tabUnescoBadge.textContent = "…";
-    if (this.tabJpsBadge) this.tabJpsBadge.textContent = "…";
+    if (this.tabWikiBadge) this.tabWikiBadge.textContent = "検索中…";
+    if (this.tabOsmBadge) this.tabOsmBadge.textContent = "検索中…";
+    if (this.tabUnescoBadge) this.tabUnescoBadge.textContent = "検索中…";
+    if (this.tabJpsBadge) this.tabJpsBadge.textContent = "検索中…";
 
     this.switchTab("wiki");
-    this.popupContainer.style.display = "block";
+    if (this.popupContainer) this.popupContainer.style.display = "block";
   }
 
   setSourceEvents(sourceType, events) {
-    this.eventsDataStore[sourceType] = events;
+    this.eventsDataStore[sourceType] = events || [];
 
     const badgeMap = {
       wiki: this.tabWikiBadge,
@@ -244,7 +242,7 @@ export class UIController {
     };
 
     if (badgeMap[sourceType]) {
-      badgeMap[sourceType].textContent = `${events.length}件`;
+      badgeMap[sourceType].textContent = `${(events || []).length}件`;
     }
 
     if (this.currentSource === sourceType) {
@@ -262,32 +260,33 @@ export class UIController {
         jps: "ジャパンサーチ (国立国会図書館)"
       };
 
-      this.popupTitle.textContent = names[this.currentSource] || "歴史スポット";
-      this.popupEra.textContent = "このデータベースの該当データなし";
-      this.popupCategory.textContent = "検索半径内";
-      this.popupShortDesc.textContent = "指定された半径内にこのデータベースの史跡は検出されませんでした。別のタブに切り替えるか、半径を変更してみてください。";
-      this.popupCounter.textContent = "0件";
-      this.btnPopupDetail.style.display = "none";
+      if (this.popupTitle) this.popupTitle.textContent = names[this.currentSource] || "歴史スポット";
+      if (this.popupEra) this.popupEra.textContent = "検索半径内にデータが見つかりませんでした";
+      if (this.popupCategory) this.popupCategory.textContent = "周辺情報";
+      if (this.popupShortDesc) this.popupShortDesc.textContent = "指定された半径内にこのデータベースの史跡はまだ登録されていません。上の他のタブ（Wiki/史跡/ユネスコ/国会図）に切り替えるか、半径を変更してみてください。";
+      if (this.popupCounter) this.popupCounter.textContent = "0件";
+      if (this.btnPopupDetail) this.btnPopupDetail.style.display = "none";
       this.currentSelectedEvent = null;
       return;
     }
 
     const eventData = list[this.currentIndex];
     this.currentSelectedEvent = eventData;
-    this.popupTitle.textContent = eventData.title;
-    this.popupEra.textContent = `${eventData.year ? eventData.year + '年' : ''} ${eventData.era ? ' / ' + eventData.era : ''}`;
-    this.popupCategory.textContent = eventData.categoryLabel || "歴史的出来事";
-    this.popupShortDesc.textContent = eventData.shortDesc;
-    this.popupCounter.textContent = `${this.currentIndex + 1} / ${list.length}件`;
-    this.btnPopupDetail.style.display = "block";
+    if (this.popupTitle) this.popupTitle.textContent = eventData.title;
+    if (this.popupEra) this.popupEra.textContent = `${eventData.year ? eventData.year + '年' : ''} ${eventData.era ? ' / ' + eventData.era : ''}`;
+    if (this.popupCategory) this.popupCategory.textContent = eventData.categoryLabel || "歴史的出来事";
+    if (this.popupShortDesc) this.popupShortDesc.textContent = eventData.shortDesc;
+    if (this.popupCounter) this.popupCounter.textContent = `${this.currentIndex + 1} / ${list.length}件`;
+    if (this.btnPopupDetail) this.btnPopupDetail.style.display = "block";
   }
 
   hidePopup() {
-    this.popupContainer.style.display = "none";
+    if (this.popupContainer) this.popupContainer.style.display = "none";
     this.currentSelectedEvent = null;
   }
 
   openDetailModal(eventData) {
+    if (!eventData) return;
     this.modalTitle.textContent = eventData.title;
     this.modalEra.textContent = `${eventData.year ? eventData.year + '年' : ''} (${eventData.era || ''})`;
     this.modalCategory.textContent = eventData.categoryLabel;
@@ -333,7 +332,7 @@ export class UIController {
 
   renderSearchResults(results, onSelect) {
     if (!this.searchResultsContainer) return;
-    if (results.length === 0) {
+    if (!results || results.length === 0) {
       this.searchResultsContainer.style.display = "none";
       return;
     }

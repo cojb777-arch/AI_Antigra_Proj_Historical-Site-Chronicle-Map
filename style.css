@@ -5,14 +5,14 @@
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
-  --bg-glass: rgba(255, 255, 255, 0.92);
-  --bg-glass-dark: rgba(15, 23, 42, 0.92);
+  --bg-glass: rgba(255, 255, 255, 0.94);
+  --bg-glass-dark: rgba(15, 23, 42, 0.94);
   --text-main: #0f172a;
   --text-muted: #64748b;
   --border-light: rgba(226, 232, 240, 0.85);
-  --shadow-lg: 0 12px 30px -5px rgba(0, 0, 0, 0.15), 0 8px 12px -6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 16px 36px -5px rgba(0, 0, 0, 0.18), 0 8px 16px -6px rgba(0, 0, 0, 0.12);
   --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --radius-lg: 18px;
+  --radius-lg: 20px;
   --radius-md: 12px;
   --radius-full: 9999px;
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
@@ -289,23 +289,23 @@ html, body {
 }
 
 /* ----------------------------------------------------
- * OpenLayers Popup Overlay (PC: 横長 / スマホ: 縦長カード)
+ * OpenLayers Popup Overlay (PC: 超横長620px / スマホ: 縦長カード)
  * ---------------------------------------------------- */
 .ol-popup {
   position: absolute;
   background: white;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22);
-  padding: 18px 20px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);
+  padding: 20px 24px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
-  bottom: 14px;
+  bottom: 16px;
   z-index: 50;
   display: none;
   animation: popUpAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   
-  /* PC用デフォルト: 横長デザイン (幅 500px) */
-  width: 500px;
-  left: -250px;
+  /* PC用超ワイド設定: 横幅 620px */
+  width: 620px;
+  left: -310px;
 }
 
 .ol-popup:after {
@@ -318,7 +318,7 @@ html, body {
   pointer-events: none;
   border-color: rgba(255, 255, 255, 0);
   border-top-color: #ffffff;
-  border-width: 11px;
+  border-width: 12px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -326,28 +326,28 @@ html, body {
 /* 吹き出し内タブ */
 .popup-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   background: #f1f5f9;
   padding: 4px;
-  border-radius: 10px;
-  margin-bottom: 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 
 .popup-tab-btn {
   flex: 1;
   background: none;
   border: none;
-  padding: 7px 6px;
-  font-size: 0.8rem;
+  padding: 8px 6px;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #64748b;
-  border-radius: 8px;
+  border-radius: 9px;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .popup-tab-btn.active {
@@ -357,9 +357,9 @@ html, body {
 }
 
 .tab-badge {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   background: #e2e8f0;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: 10px;
 }
 .popup-tab-btn.active .tab-badge {
@@ -371,7 +371,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .popup-header-right {
@@ -384,18 +384,18 @@ html, body {
   display: inline-block;
   background: #eff6ff;
   color: #2563eb;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 6px;
 }
 
 .popup-counter-badge {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #475569;
   background: #f1f5f9;
-  padding: 3px 10px;
+  padding: 3px 12px;
   border-radius: 12px;
 }
 
@@ -405,8 +405,8 @@ html, body {
   font-size: 14px;
   color: #64748b;
   cursor: pointer;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -419,34 +419,34 @@ html, body {
 }
 
 .popup-title {
-  font-size: 1.15rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.35;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .popup-era {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: #64748b;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-weight: 600;
 }
 
 .popup-short-desc {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #334155;
-  line-height: 1.55;
-  margin-bottom: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 6; /* PC用で最大6行まで拡大表示 */
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .popup-footer {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
@@ -459,12 +459,12 @@ html, body {
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -476,10 +476,10 @@ html, body {
   flex: 1;
   background: var(--primary);
   border: none;
-  padding: 10px;
+  padding: 11px;
   border-radius: var(--radius-md);
   color: white;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease;
@@ -521,12 +521,12 @@ html, body {
 .modal-card {
   background: white;
   width: 90%;
-  max-width: 540px;
-  max-height: 85vh;
+  max-width: 560px;
+  max-height: 88vh;
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
-  padding: 24px;
+  padding: 26px;
   position: relative;
   transform: translateY(20px);
   transition: transform 0.25s ease;
@@ -558,7 +558,7 @@ html, body {
 }
 
 .modal-title-text {
-  font-size: 1.35rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: #0f172a;
   margin-bottom: 4px;
@@ -574,8 +574,8 @@ html, body {
 }
 
 .modal-body-text {
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 0.98rem;
+  line-height: 1.65;
   color: #334155;
   margin-bottom: 16px;
   white-space: pre-wrap;
@@ -587,9 +587,9 @@ html, body {
   gap: 6px;
   background: #eff6ff;
   color: var(--primary);
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
   text-decoration: none;
   transition: background 0.15s ease;
@@ -653,7 +653,7 @@ html, body {
 }
 
 /* ----------------------------------------------------
- * モバイル・タブレット用調整 (スマホでは縦に長い見やすい形状)
+ * モバイル用 (スマホではさらに縦長でしっかり表示)
  * ---------------------------------------------------- */
 @media (max-width: 640px) {
   .target-guide-banner {
@@ -686,18 +686,18 @@ html, body {
     flex: 1;
   }
 
-  /* 携帯スマホ用: 縦に長いカード型吹き出し */
+  /* 携帯スマホ用: 縦に長いゆったり縦長カード吹き出し */
   .ol-popup {
-    width: 320px;
-    left: -160px;
-    padding: 16px;
-    max-height: 70vh;
+    width: min(360px, 92vw);
+    left: calc(-1 * min(360px, 92vw) / 2);
+    padding: 18px;
+    max-height: 78vh;
     overflow-y: auto;
   }
 
   .popup-tabs {
     flex-wrap: wrap;
-    gap: 3px;
+    gap: 4px;
   }
 
   .popup-tab-btn {
@@ -707,12 +707,12 @@ html, body {
   }
 
   .popup-title {
-    font-size: 1.08rem;
+    font-size: 1.12rem;
   }
 
   .popup-short-desc {
-    font-size: 0.85rem;
-    -webkit-line-clamp: 6; /* スマホでは縦長に文章を長めに表示 */
+    font-size: 0.88rem;
+    -webkit-line-clamp: 8; /* スマホでは縦長に文章をたっぷり表示 */
     margin-bottom: 16px;
   }
 }
