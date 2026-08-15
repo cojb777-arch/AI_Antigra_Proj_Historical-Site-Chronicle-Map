@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>史跡クロニクルマップ - 周辺の過去の出来事・エピソード</title>
+  <meta name="description" content="OpenLayersを活用し、指定地点周辺の過去の出来事・歴史的事件・文化・建築などのエピソードを吹き出しで探求できる地図アプリ。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="./assets/index-Uzc59Ijr.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-Cp0ihK4c.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 地図キャンバス -->
+    <div id="map"></div>
+
+    <!-- ガイド指示バナー -->
+    <div class="target-guide-banner">
+      💡 地図上の好きな場所をタップするとピンが立ち、その周辺の過去の出来事が自動抽出されます
+    </div>
+
+    <!-- 上部ヘッダー & 検索 & フィルター -->
+    <div class="top-bar">
+      <div class="brand-search-box">
+        <div class="brand-logo">
+          <div class="brand-icon">📜</div>
+          <span>史跡クロニクルマップ</span>
+        </div>
+
+        <div class="search-wrapper">
+          <input type="text" id="search-input" class="search-input" placeholder="地名、出来事、人物で過去を検索..." autocomplete="off">
+          <div id="search-results" class="search-results"></div>
+        </div>
+
+        <div class="header-actions">
+          <select id="radius-select" class="basemap-select" title="周辺検索半径">
+            <option value="1">半径 1km</option>
+            <option value="3">半径 3km</option>
+            <option value="5" selected>半径 5km</option>
+            <option value="10">半径 10km</option>
+          </select>
+
+          <select id="basemap-select" class="basemap-select" title="地図レイヤー切替">
+            <option value="osm">標準地図 (OSM)</option>
+            <option value="gsi_std">地理院 標準地図</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 年代フィルター -->
+      <div id="period-filter-container" class="filter-bar"></div>
+
+      <!-- カテゴリフィルター -->
+      <div id="category-filter-container" class="filter-bar"></div>
+    </div>
+
+    <!-- フローティングアクションボタン -->
+    <div class="floating-controls">
+      <button id="btn-locate" class="btn-fab" title="現在地を表示">
+        📍 現在地
+      </button>
+      <button id="btn-add-event" class="btn-fab btn-fab-primary" title="過去の出来事を追加">
+        ✏️ 出来事を投稿
+      </button>
+    </div>
+
+    <!-- OpenLayers 吹き出し（5大世界データベース統合タブ） -->
+    <div id="popup-overlay" class="ol-popup">
+      <!-- 5大データベース切替タブ -->
+      <div class="popup-tabs">
+        <button id="tab-wiki-btn" class="popup-tab-btn active" title="Wikidata & DBpedia">
+          🌐 Wiki <span id="tab-wiki-badge" class="tab-badge">…</span>
+        </button>
+        <button id="tab-osm-btn" class="popup-tab-btn" title="OpenStreetMap & OHM 史跡">
+          🏛️ 史跡 <span id="tab-osm-badge" class="tab-badge">…</span>
+        </button>
+        <button id="tab-unesco-btn" class="popup-tab-btn" title="UNESCO 世界遺産">
+          🏛️ ユネスコ <span id="tab-unesco-badge" class="tab-badge">…</span>
+        </button>
+        <button id="tab-jps-btn" class="popup-tab-btn" title="ジャパンサーチ">
+          🇯🇵 国会図 <span id="tab-jps-badge" class="tab-badge">…</span>
+        </button>
+      </div>
+
+      <div id="popup-content">
+        <div class="popup-header">
+          <span id="popup-category" class="popup-tag">歴史的事件</span>
+          <div class="popup-header-right">
+            <span id="popup-counter" class="popup-counter-badge">1 / 1件</span>
+            <button id="btn-popup-close" class="btn-close-popup">✕</button>
+          </div>
+        </div>
+        <h3 id="popup-title" class="popup-title">タイトル</h3>
+        <div id="popup-era" class="popup-era">年代</div>
+        <p id="popup-short-desc" class="popup-short-desc">概要テキスト</p>
+        
+        <div class="popup-footer">
+          <div class="popup-nav-btns">
+            <button id="btn-popup-prev" class="btn-nav" title="前の出来事">◀</button>
+            <button id="btn-popup-next" class="btn-nav" title="次の出来事">▶</button>
+          </div>
+          <button id="btn-popup-detail" class="btn-popup-detail">詳細を読む →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div id="detail-modal" class="modal-overlay">
+      <div class="modal-card">
+        <button id="btn-close-modal" class="modal-close-btn">✕</button>
+        <img id="modal-image" class="modal-img" src="" alt="出来事イメージ" style="display: none;">
+        <span id="modal-category" class="popup-tag" style="margin-bottom: 8px;">カテゴリ</span>
+        <h2 id="modal-title" class="modal-title-text">タイトル</h2>
+        <div class="modal-meta">
+          <span id="modal-era">年代</span>
+          <span>・</span>
+          <span id="modal-location">場所</span>
+        </div>
+        <p id="modal-desc" class="modal-body-text">詳細な歴史解説テキスト</p>
+        <div style="margin-bottom: 16px;">
+          <a id="modal-wiki-link" href="#" target="_blank" class="wiki-link-btn" style="display: none;">
+            🌐 関連アーカイブ・記事を開く ↗
+          </a>
+        </div>
+        <div id="modal-tags" class="tags-container"></div>
+      </div>
+    </div>
+
+    <!-- 出来事投稿モーダル -->
+    <div id="add-modal" class="modal-overlay">
+      <div class="modal-card">
+        <button id="btn-close-add-modal" class="modal-close-btn">✕</button>
+        <h2 class="modal-title-text" style="margin-bottom: 16px;">過去の出来事を投稿</h2>
+        <form id="add-event-form">
+          <div class="form-group">
+            <label for="add-title">出来事のタイトル *</label>
+            <input type="text" id="add-title" name="title" class="form-control" placeholder="例: 〇〇合戦、〇〇駅開通" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="add-year">西暦年 *</label>
+              <input type="number" id="add-year" name="year" class="form-control" placeholder="例: 1868" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="add-era">元号・時代</label>
+              <input type="text" id="add-era" name="era" class="form-control" placeholder="例: 明治元年">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="add-category">ジャンル</label>
+            <select id="add-category" name="category" class="form-control">
+              <option value="history">歴史的事件・政治</option>
+              <option value="culture">建築・文化・人物</option>
+              <option value="disaster">災害・出来事</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="add-location">スポット名称</label>
+            <input type="text" id="add-location" name="locationName" class="form-control" placeholder="例: 〇〇城跡、〇〇前広場">
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="add-lat">緯度 (Latitude)</label>
+              <input type="number" step="any" id="add-lat" name="lat" class="form-control" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="add-lng">経度 (Longitude)</label>
+              <input type="number" step="any" id="add-lng" name="lng" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="add-short-desc">短い概要 *</label>
+            <textarea id="add-short-desc" name="shortDesc" class="form-control" rows="2" placeholder="吹き出しに表示される概要" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="add-full-desc">詳しい解説</label>
+            <textarea id="add-full-desc" name="fullDesc" class="form-control" rows="3" placeholder="詳細ダイアログに表示される解説文"></textarea>
+          </div>
+          <button type="submit" class="btn-submit">出来事を地図に記録する</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
