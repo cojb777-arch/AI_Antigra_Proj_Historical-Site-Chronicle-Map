@@ -1,7 +1,7 @@
 import { PERIOD_GROUPS, CATEGORIES } from "./eventsData.js";
 
 /**
- * UIコントロールとインターフェース管理クラス (Wikidata / Japan Search タブ分離版)
+ * UIコントロールとインターフェース管理クラス (5大世界データベース完全統合版)
  */
 export class UIController {
   constructor(options = {}) {
@@ -13,10 +13,14 @@ export class UIController {
     this.onLocateMe = options.onLocateMe || (() => {});
     this.onRadiusChange = options.onRadiusChange || (() => {});
 
-    // ソース別イベント保持
-    this.wikiEvents = [];
-    this.jpsEvents = [];
-    this.currentSource = "wiki"; // 'wiki' or 'jps'
+    // マルチソース・データ保持
+    this.eventsDataStore = {
+      wiki: [],
+      osm: [],
+      unesco: [],
+      jps: []
+    };
+    this.currentSource = "wiki";
     this.currentIndex = 0;
 
     this.initDOMElements();
@@ -65,10 +69,15 @@ export class UIController {
     this.btnPopupDetail = document.getElementById("btn-popup-detail");
     this.btnPopupClose = document.getElementById("btn-popup-close");
 
-    // タブ要素
+    // 5大データベース切り替えタブ
     this.tabWikiBtn = document.getElementById("tab-wiki-btn");
+    this.tabOsmBtn = document.getElementById("tab-osm-btn");
+    this.tabUnescoBtn = document.getElementById("tab-unesco-btn");
     this.tabJpsBtn = document.getElementById("tab-jps-btn");
+
     this.tabWikiBadge = document.getElementById("tab-wiki-badge");
+    this.tabOsmBadge = document.getElementById("tab-osm-badge");
+    this.tabUnescoBadge = document.getElementById("tab-unesco-badge");
     this.tabJpsBadge = document.getElementById("tab-jps-badge");
 
     this.currentSelectedEvent = null;
@@ -137,13 +146,11 @@ export class UIController {
       this.closeAddModal();
     });
 
-    // タブ切替（Wiki / Japan Search）
-    this.tabWikiBtn?.addEventListener("click", () => {
-      this.switchTab("wiki");
-    });
-    this.tabJpsBtn?.addEventListener("click", () => {
-      this.switchTab("jps");
-    });
+    // 5大データベース タブ切り替えイベント
+    this.tabWikiBtn?.addEventListener("click", () => this.switchTab("wiki"));
+    this.tabOsmBtn?.addEventListener("click", () => this.switchTab("osm"));
+    this.tabUnescoBtn?.addEventListener("click", () => this.switchTab("unesco"));
+    this.tabJpsBtn?.addEventListener("click", () => this.switchTab("jps"));
 
     this.addForm?.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -172,7 +179,7 @@ export class UIController {
     });
 
     this.btnPopupPrev?.addEventListener("click", () => {
-      const activeList = this.getActiveEventsList();
+      const activeList = this.eventsDataStore[this.currentSource] || [];
       if (activeList.length > 0) {
         this.currentIndex = (this.currentIndex - 1 + activeList.length) % activeList.length;
         this.updatePopupContent();
@@ -180,7 +187,7 @@ export class UIController {
     });
 
     this.btnPopupNext?.addEventListener("click", () => {
-      const activeList = this.getActiveEventsList();
+      const activeList = this.eventsDataStore[this.currentSource] || [];
       if (activeList.length > 0) {
         this.currentIndex = (this.currentIndex + 1) % activeList.length;
         this.updatePopupContent();
@@ -198,66 +205,67 @@ export class UIController {
     });
   }
 
-  getActiveEventsList() {
-    return this.currentSource === "wiki" ? this.wikiEvents : this.jpsEvents;
-  }
-
   switchTab(sourceType) {
     this.currentSource = sourceType;
     this.currentIndex = 0;
 
-    if (sourceType === "wiki") {
-      this.tabWikiBtn.classList.add("active");
-      this.tabJpsBtn.classList.remove("active");
-    } else {
-      this.tabJpsBtn.classList.add("active");
-      this.tabWikiBtn.classList.remove("active");
-    }
+    [this.tabWikiBtn, this.tabOsmBtn, this.tabUnescoBtn, this.tabJpsBtn].forEach(btn => btn?.classList.remove("active"));
+
+    if (sourceType === "wiki") this.tabWikiBtn?.classList.add("active");
+    if (sourceType === "osm") this.tabOsmBtn?.classList.add("active");
+    if (sourceType === "unesco") this.tabUnescoBtn?.classList.add("active");
+    if (sourceType === "jps") this.tabJpsBtn?.classList.add("active");
 
     this.updatePopupContent();
   }
 
   resetPopupData() {
-    this.wikiEvents = [];
-    this.jpsEvents = [];
+    this.eventsDataStore = { wiki: [], osm: [], unesco: [], jps: [] };
     this.currentIndex = 0;
     this.currentSource = "wiki";
 
     if (this.tabWikiBadge) this.tabWikiBadge.textContent = "…";
-    if (this.tabJpsBadge) this.tabJpsBadge.textContent = "読み込み中…";
+    if (this.tabOsmBadge) this.tabOsmBadge.textContent = "…";
+    if (this.tabUnescoBadge) this.tabUnescoBadge.textContent = "…";
+    if (this.tabJpsBadge) this.tabJpsBadge.textContent = "…";
 
-    this.tabWikiBtn.classList.add("active");
-    this.tabJpsBtn.classList.remove("active");
+    this.switchTab("wiki");
     this.popupContainer.style.display = "block";
   }
 
-  // Wikidata/ローカルデータ設定（高速）
-  setWikiEvents(events) {
-    this.wikiEvents = events;
-    if (this.tabWikiBadge) this.tabWikiBadge.textContent = `${events.length}件`;
-    if (this.currentSource === "wiki") {
-      this.updatePopupContent();
-    }
-  }
+  setSourceEvents(sourceType, events) {
+    this.eventsDataStore[sourceType] = events;
 
-  // Japan Searchデータ設定（非同期・後から到着）
-  setJpsEvents(events) {
-    this.jpsEvents = events;
-    if (this.tabJpsBadge) this.tabJpsBadge.textContent = `${events.length}件`;
-    if (this.currentSource === "jps") {
+    const badgeMap = {
+      wiki: this.tabWikiBadge,
+      osm: this.tabOsmBadge,
+      unesco: this.tabUnescoBadge,
+      jps: this.tabJpsBadge
+    };
+
+    if (badgeMap[sourceType]) {
+      badgeMap[sourceType].textContent = `${events.length}件`;
+    }
+
+    if (this.currentSource === sourceType) {
       this.updatePopupContent();
     }
   }
 
   updatePopupContent() {
-    const list = this.getActiveEventsList();
+    const list = this.eventsDataStore[this.currentSource] || [];
     if (!list || list.length === 0) {
-      this.popupTitle.textContent = this.currentSource === "wiki" ? "Wikidata・歴史スポット" : "ジャパンサーチ (公式アーカイブ)";
-      this.popupEra.textContent = "このカテゴリの該当データなし";
+      const names = {
+        wiki: "Wikidata & DBpedia 世界ナレッジ",
+        osm: "OpenStreetMap & OHM 史跡・遺構",
+        unesco: "UNESCO ユネスコ世界遺産",
+        jps: "ジャパンサーチ (国立国会図書館)"
+      };
+
+      this.popupTitle.textContent = names[this.currentSource] || "歴史スポット";
+      this.popupEra.textContent = "このデータベースの該当データなし";
       this.popupCategory.textContent = "検索半径内";
-      this.popupShortDesc.textContent = this.currentSource === "wiki" 
-        ? "周辺に登録されたWikidataスポットはありません。ピンの場所を変更するか、Japan Searchタブをご確認ください。"
-        : "ジャパンサーチからデータを取得中、または周辺に該当データがありません。";
+      this.popupShortDesc.textContent = "指定された半径内にこのデータベースの史跡は検出されませんでした。別のタブに切り替えるか、半径を変更してみてください。";
       this.popupCounter.textContent = "0件";
       this.btnPopupDetail.style.display = "none";
       this.currentSelectedEvent = null;

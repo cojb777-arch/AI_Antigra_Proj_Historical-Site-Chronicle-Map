@@ -14,7 +14,13 @@ import { fromLonLat, toLonLat } from "ol/proj";
 
 import { INITIAL_EVENTS } from "./eventsData.js";
 import { UIController } from "./uiController.js";
+
+// 5大データベースサービス群
 import { WikidataService } from "./wikidataService.js";
+import { DbpediaService } from "./dbpediaService.js";
+import { OverpassService } from "./overpassService.js";
+import { OhmService } from "./ohmService.js";
+import { UnescoService } from "./unescoService.js";
 import { JapanSearchService } from "./japanSearchService.js";
 
 class ChronicleMapApp {
@@ -22,7 +28,12 @@ class ChronicleMapApp {
     this.eventsList = [...INITIAL_EVENTS];
     this.loadUserEvents();
     
+    // サービスインスタンス初期化
     this.wikidataService = new WikidataService();
+    this.dbpediaService = new DbpediaService();
+    this.overpassService = new OverpassService();
+    this.ohmService = new OhmService();
+    this.unescoService = new UnescoService();
     this.japanSearchService = new JapanSearchService();
 
     this.activePeriod = "all";
@@ -134,6 +145,8 @@ class ChronicleMapApp {
     if (category === "culture") color = "#457b9d";
     if (category === "disaster") color = "#d97706";
     if (isWiki) color = "#2563eb";
+    if (id.startsWith("osm-") || id.startsWith("ohm-")) color = "#8b5cf6";
+    if (id.startsWith("unesco-")) color = "#f59e0b";
     if (id.startsWith("jps-")) color = "#10b981";
 
     return new Style({
@@ -177,7 +190,7 @@ class ChronicleMapApp {
         const coord = clickedFeature.getGeometry().getCoordinates();
         this.overlay.setPosition(coord);
         this.ui.resetPopupData();
-        this.ui.setWikiEvents([eventData]);
+        this.ui.setSourceEvents("wiki", [eventData]);
       } else {
         const lonLat = toLonLat(evt.coordinate);
         this.placeTargetPin(lonLat);
@@ -241,56 +254,67 @@ class ChronicleMapApp {
   }
 
   /**
-   * ターゲットピン周辺の歴史検索 (高速プログレッシブ取得: Wiki先行 ➔ Japan Search追従)
+   * ターゲットピン周辺の歴史検索 (5大データベース並列＆ストリーミング取得)
    */
   async searchAroundTarget() {
     if (!this.targetCoordinate) return;
 
     const [targetLng, targetLat] = this.targetCoordinate;
-
-    // 吹き出しのリセットと位置合わせ
     this.ui.resetPopupData();
 
-    // 1. ローカルデータ
+    // ローカルデータ
     const localMatches = this.eventsList.filter(evt => {
       if (!evt.coordinates) return false;
       const distKm = this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0]);
-      const matchRadius = distKm <= this.searchRadiusKm;
-      const matchPeriod = (this.activePeriod === "all" || evt.periodGroup === this.activePeriod);
-      const matchCategory = (this.activeCategory === "all" || evt.category === this.activeCategory);
-      return matchRadius && matchPeriod && matchCategory;
+      return distKm <= this.searchRadiusKm;
     }).map(evt => ({
       ...evt,
       distKm: this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0])
     }));
 
-    // 2. ステップ1: 高速な Wikidata を非同期取得して即座に吹き出しに表示！
-    this.wikidataService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(wikiMatches => {
-      const wikiFormatted = wikiMatches.map(evt => ({
-        ...evt,
-        distKm: this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0])
+    // 1. 【Wiki & DBpedia タブ】(爆速並列フェッチ)
+    Promise.all([
+      this.wikidataService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm),
+      this.dbpediaService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm)
+    ]).then(([wikiList, dbpList]) => {
+      const combined = [...localMatches, ...wikiList, ...dbpList].map(e => ({
+        ...e,
+        distKm: e.distKm || this.getHaversineDistance(targetLat, targetLng, e.coordinates[1], e.coordinates[0])
       }));
-
-      const wikiCombined = [...localMatches, ...wikiFormatted];
-      wikiCombined.sort((a, b) => a.distKm - b.distKm);
-
-      this.mergeExternalEventsToMap(wikiMatches);
-      // 爆速でWikidataタブへ結果を反映
-      this.ui.setWikiEvents(wikiCombined.slice(0, 15));
+      combined.sort((a, b) => a.distKm - b.distKm);
+      this.mergeExternalEventsToMap([...wikiList, ...dbpList]);
+      this.ui.setSourceEvents("wiki", combined.slice(0, 15));
     });
 
-    // 3. ステップ2: 遅めの Japan Search API を非同期バックグラウンドで処理
-    this.japanSearchService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(jpsMatches => {
-      const jpsFormatted = jpsMatches.map(evt => ({
-        ...evt,
-        distKm: this.getHaversineDistance(targetLat, targetLng, evt.coordinates[1], evt.coordinates[0])
+    // 2. 【OSM & OHM 史跡タブ】(並列フェッチ)
+    Promise.all([
+      this.overpassService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm),
+      this.ohmService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm)
+    ]).then(([osmList, ohmList]) => {
+      const combined = [...osmList, ...ohmList].map(e => ({
+        ...e,
+        distKm: this.getHaversineDistance(targetLat, targetLng, e.coordinates[1], e.coordinates[0])
       }));
+      combined.sort((a, b) => a.distKm - b.distKm);
+      this.mergeExternalEventsToMap(combined);
+      this.ui.setSourceEvents("osm", combined.slice(0, 15));
+    });
 
+    // 3. 【ユネスコ世界遺産タブ】(即時判定)
+    this.unescoService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(unescoList => {
+      this.mergeExternalEventsToMap(unescoList);
+      this.ui.setSourceEvents("unesco", unescoList);
+    });
+
+    // 4. 【ジャパンサーチ タブ】(バックグラウンドフェッチ)
+    this.japanSearchService.fetchEventsAround(targetLat, targetLng, this.searchRadiusKm).then(jpsList => {
+      const jpsFormatted = jpsList.map(e => ({
+        ...e,
+        distKm: this.getHaversineDistance(targetLat, targetLng, e.coordinates[1], e.coordinates[0])
+      }));
       jpsFormatted.sort((a, b) => a.distKm - b.distKm);
-
-      this.mergeExternalEventsToMap(jpsMatches);
-      // 完了次第Japan Searchタブのバッジ＆リストを更新
-      this.ui.setJpsEvents(jpsFormatted.slice(0, 15));
+      this.mergeExternalEventsToMap(jpsList);
+      this.ui.setSourceEvents("jps", jpsFormatted.slice(0, 15));
     });
   }
 

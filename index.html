@@ -65,15 +65,21 @@
       </button>
     </div>
 
-    <!-- OpenLayers 吹き出し（Popup Overlay） -->
+    <!-- OpenLayers 吹き出し（5大世界データベース統合タブ） -->
     <div id="popup-overlay" class="ol-popup">
-      <!-- ソース切替タブ -->
+      <!-- 5大データベース切替タブ -->
       <div class="popup-tabs">
-        <button id="tab-wiki-btn" class="popup-tab-btn active">
-          🌐 Wikidata史跡 <span id="tab-wiki-badge" class="tab-badge">…</span>
+        <button id="tab-wiki-btn" class="popup-tab-btn active" title="Wikidata & DBpedia">
+          🌐 Wiki <span id="tab-wiki-badge" class="tab-badge">…</span>
         </button>
-        <button id="tab-jps-btn" class="popup-tab-btn">
-          🇯🇵 ジャパンサーチ <span id="tab-jps-badge" class="tab-badge">読み込み中…</span>
+        <button id="tab-osm-btn" class="popup-tab-btn" title="OpenStreetMap & OHM 史跡">
+          🏛️ 史跡 <span id="tab-osm-badge" class="tab-badge">…</span>
+        </button>
+        <button id="tab-unesco-btn" class="popup-tab-btn" title="UNESCO 世界遺産">
+          🏛️ ユネスコ <span id="tab-unesco-badge" class="tab-badge">…</span>
+        </button>
+        <button id="tab-jps-btn" class="popup-tab-btn" title="ジャパンサーチ">
+          🇯🇵 国会図 <span id="tab-jps-badge" class="tab-badge">…</span>
         </button>
       </div>
 
